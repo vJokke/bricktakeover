@@ -18,7 +18,7 @@
   EMPTY = 0, PLAYER = 1, BRICK = 2,
   UP = 1, LEFT = 0, RIGHT = 2, DOWN = 3,
   KEY_LEFT = 37, KEY_RIGHT = 39, KEY_UP = 38, KEY_DOWN = 40,
-  canvas, ctx, score, frames, keystate, gamestate, kusi;
+  canvas, ctx, score, frames, keystate, gamestate;
 
 // grid for the game
   grid = {
@@ -230,7 +230,6 @@ function dropBrick() {
     gamestate = 1;
   }
 
-    // postMessages have not yet been tested on the server
   $(document).ready(function () {
       "use strict";
 
@@ -243,16 +242,14 @@ function dropBrick() {
           window.parent.postMessage(msg, "*");
       });
 
-      /* kusi is a test variable used to test the saving of the game
-      without running the game on the server
-      */
+
       $("#save").click(function () {
+        // cannot save if game is lost
         if (gamestate === 0){
-              kusi = score; // take kusi away
           var msg = {
               "messageType": "SAVE",
               "gameState": {
-                  "score": parseFloat($("#pointspawn"))
+                  "score": parseFloat($("#pointspawn").text())
               }
           };
           console.log(msg);
@@ -261,7 +258,6 @@ function dropBrick() {
       
       });
 
-      // NOT TESTED, sends load request 
       $("#load").click(function () {
           var msg = {
               "messageType": "LOAD_REQUEST",
@@ -270,13 +266,8 @@ function dropBrick() {
 
       });
 
-      // TODO: if no points available cannot be loaded
       window.addEventListener("message", function (evt) {
           if (evt.data.messageType === "LOAD") {
-              if (evt.data === null){
-                console.log("No previosly saved game.");
-                return;
-              }
               loadgame(evt.data.gameState.score);
               console.log("loaded score:" + evt.data.gameState.score);
           } else if (evt.data.messageType === "ERROR") {
@@ -286,7 +277,6 @@ function dropBrick() {
 
   });
 
-    // variable kusi is just for test purposes
 
   function loadgame(loadedscore) {
       init();
