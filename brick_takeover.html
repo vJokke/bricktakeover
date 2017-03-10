@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Brick Takeover</title>
+  <meta charset="utf-8">
+  <script src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
+  <style>
+    canvas {
+  		display: block;
+  		border: 1px solid #000;
+  	}
+  </style>
+    
+</head>
+<body>
+<script>
+  var COLS = 25, ROWS = 25,
+  EMPTY = 0, PLAYER = 1, BRICK = 2,
+  UP = 1, LEFT = 0, RIGHT = 2, DOWN = 3,
+  KEY_LEFT = 37, KEY_RIGHT = 39, KEY_UP = 38, KEY_DOWN = 40,
+  canvas, ctx, score, frames, keystate, gamestate, kusi;
+
+// grid for the game
+  grid = {
+  	width: null,
+  	height: null,
+  	array_: null,
+
+  	init: function(empty, column, row) {
+  		this.width = column;
+  		this.height = row;
+  		this.array_ = [];
+  		for (var x=0; x < column; x++) {
+  			this.array_.push([]);
+  			for (var y=0; y < row; y++) {
+  				this.array_[x].push(empty);
+  			}
+  		}
+  	},
+    set: function(val, x, y){
+      this.array_[x][y] = val;
+    },
+
+    get: function(x, y){
+      return this.array_[x][y];
+    }
+  }
+
+player = {
+  direction: null,
+  lastlocation: null,
+  direction_queue: null,
+
+  init: function(dir, x, y){
+    this.direction = dir;
+    this.direction_queue = [];
+    this.insert(x, y);
+  },
+
+  insert: function(x, y){
+    this.direction_queue.unshift({x:x, y:y});
+    this.lastlocation = this.direction_queue[0];
+  },
+
+  remove: function(){
+    return this.direction_queue.pop();
+  }
+};
+
+
+function dropBrick() {
+	var empty = [];
+	// iterate through the grid and find empty slots to push to empty list
+	for (var x=0; x < grid.width; x++) {
+		for (var y=0; y < grid.height; y++) {
+			if (grid.get(x, y) === EMPTY) {
+				empty.push({x:x, y:y});
+			}
+		}
+	}
+	// chooses a random slot to drop the brick in
+	var random = empty[Math.round(Math.random()*(empty.length - 1))];
+	grid.set(BRICK, random.x, random.y);
+}
+
+  function main(){
+
+      canvas = document.createElement("canvas");
+      canvas.width = COLS*20;
+      canvas.height = ROWS*20;
+      ctx = canvas.getContext("2d");
+      document.body.appendChild(canvas);
+      frames = 0;
+      keystate = {};
+      // tracking the inputs on the keyboard
+      document.addEventListener("keydown", function(evt) {
+        keystate[evt.keyCode] = true;
+      });
+      document.addEventListener("keyup", function(evt) {
+        delete keystate[evt.keyCode];
+      });
+      gamestate = 1;
+      init();
+      loop();
+  }
+
+  function startgame() {
+      init();
+      gamestate = 0;
+  }
+
+  function init(){
+    score = 0;
+    grid.init(EMPTY, COLS, ROWS);
+    var startingpoint = {x:10, y:5};
+    player.init(DOWN, startingpoint.x, startingpoint.y);
+    grid.set(PLAYER, startingpoint.x, startingpoint.y);
+  }
+
+  function loop(){
+    if (gamestate === 0){
+      update();
+      draw();
+    }
+
+    window.requestAnimationFrame(loop, canvas);
+
+  }
+
+
+  // udpates the gameplay, moves player according to keys pressed
+  function update(){
+
+    frames++;
+    if (keystate[KEY_LEFT] && player.direction !== RIGHT) {
+  		player.direction = LEFT;
+  	}
+  	if (keystate[KEY_UP] && player.direction !== DOWN) {
+  		player.direction = UP;
+  	}
+  	if (keystate[KEY_RIGHT] && player.direction !== LEFT) {
+  		player.direction = RIGHT;
+  	}
+  	if (keystate[KEY_DOWN] && player.direction !== UP) {
+  		player.direction = DOWN;
+  	}
+
+    if (frames%5 === 0) {
+  		// getting the last element from the players movements
+  		var nx = player.lastlocation.x;
+  		var ny = player.lastlocation.y;
+  		// updates the position depending on the players direction
+  		switch (player.direction) {
+  			case LEFT:
+  				nx--;
+  				break;
+  			case UP:
+  				ny--;
+  				break;
+  			case RIGHT:
+  				nx++;
+  				break;
+  			case DOWN:
+  				ny++;
+  				break;
+  		}
+      if (grid.get(nx, ny) === BRICK) {
+        gameover();
+        console.log("game over");
+	  } 
+
+      // checking collisions with borders
+      // moving the player to the opposite site
+      if (0 >= nx && player.direction === LEFT){
+        grid.set(PLAYER, COLS-1, ny);
+        player.insert(COLS-1, ny);
+      }
+      else if (nx >= COLS-1 && player.direction ===  RIGHT){
+        grid.set(PLAYER, 0, ny);
+        player.insert(0, ny);
+      }
+      else if (0 >= ny && player.direction === UP){
+        grid.set(PLAYER, nx, ROWS-1);
+        player.insert(nx, ROWS-1);
+      }
+      else if (ny >= ROWS && player.direction === DOWN){
+        grid.set(PLAYER, nx, 1);
+        player.insert(nx, 1);
+      }
+      else {
+        grid.set(PLAYER, nx, ny);
+        player.insert(nx, ny);
+      }
+
+      dropBrick();
+      score++;
+      $("#pointspawn").text(score);
+      // deleting players last location from the grid 
+      // and setting the last location to empty
+      var lastplayer = player.remove();
+      grid.set(EMPTY, lastplayer.x, lastplayer.y);
+  }
+}
+
+  function draw(){
+    // calculate tile-width and tile-height
+    var tilewidth = canvas.width/grid.width;
+  	var tileheight = canvas.height/grid.height;
+    // iterate through the grid and draw cells depending on the state
+    for (var x=0; x < grid.width; x++) {
+      for (var y=0; y < grid.height; y++) {
+        switch (grid.get(x, y)) {
+          case EMPTY:
+            ctx.fillStyle = "#fff999";
+            break;
+          case PLAYER:
+            ctx.fillStyle = "#000";
+            break;
+          case BRICK:
+            ctx.fillStyle = "#f00";
+            break;
+        }
+        ctx.fillRect(x*tilewidth, y*tileheight, tilewidth, tileheight);
+      }
+    }
+  }
+
+
+  function gameover(){
+    gamestate = 1;
+  }
+
+    // postMessages have not yet been tested on the server
+  $(document).ready(function () {
+      "use strict";
+
+      $("#submit_score").click(function () {
+          var msg = {
+              "messageType": "SCORE",
+              "submitscore": parseFloat($("#pointspawn").text())
+          };
+          console.log("submitted score: " + msg);
+          window.parent.postMessage(msg, "*");
+      });
+
+      /* kusi is a test variable used to test the saving of the game
+      without running the game on the server
+      */
+      $("#save").click(function () {
+        if (gamestate === 0){
+              kusi = score; // take kusi away
+          var msg = {
+              "messageType": "SAVE",
+              "gameState": {
+                  "savedscore": parseFloat($("#pointspawn"))
+              }
+          };
+          console.log(msg);
+          window.parent.postMessage(msg, "*");
+      }
+      
+      });
+
+      // NOT TESTED
+      $("#load").click(function () {
+          var msg = {
+              "messageType": "LOAD_REQUEST",
+          };
+          window.parent.postMessage(msg, "*");
+          loadgame(kusi); // delete this 
+
+      });
+
+      // TODO: if no points available cannot be loaded
+      window.addEventListener("message", function (evt) {
+          if (evt.data.messageType === "LOAD") {
+              loadscore = evt.data.gameState.savedscore;
+              $("#score").text(points);
+              loadgame(loadscore); // this should tell the game to load saved game
+          } else if (evt.data.messageType === "ERROR") {
+              alert(evt.data.info);
+          }
+      });
+
+  });
+
+    // variable kusi is just for test purposes
+
+  function loadgame(kusi) {
+      init();
+      i = 0;
+      while (i < kusi) {
+          dropBrick();
+          i++;
+      }
+      score = kusi;
+      gamestate = 0;
+  }
+
+
+  main();
+</script>
+  <div>Points: <span id="pointspawn">0</span></div>
+
+  <button onclick="startgame()">New game</button>
+  <button id="submit_score">Submit score</button><br>
+
+  <button id="save">Save</button>
+  <button id="load">Load</button>
+
+</body>
+</html>
