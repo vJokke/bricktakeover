@@ -237,9 +237,9 @@ function dropBrick() {
       $("#submit_score").click(function () {
           var msg = {
               "messageType": "SCORE",
-              "submitscore": parseFloat($("#pointspawn").text())
+              "score": parseFloat($("#pointspawn").text())
           };
-          console.log("submitted score: " + msg);
+          console.log("submitted score: " + msg.score);
           window.parent.postMessage(msg, "*");
       });
 
@@ -252,7 +252,7 @@ function dropBrick() {
           var msg = {
               "messageType": "SAVE",
               "gameState": {
-                  "savedscore": parseFloat($("#pointspawn"))
+                  "score": parseFloat($("#pointspawn"))
               }
           };
           console.log(msg);
@@ -261,22 +261,24 @@ function dropBrick() {
       
       });
 
-      // NOT TESTED
+      // NOT TESTED, sends load request 
       $("#load").click(function () {
           var msg = {
               "messageType": "LOAD_REQUEST",
           };
           window.parent.postMessage(msg, "*");
-          loadgame(kusi); // delete this 
 
       });
 
       // TODO: if no points available cannot be loaded
       window.addEventListener("message", function (evt) {
           if (evt.data.messageType === "LOAD") {
-              loadscore = evt.data.gameState.savedscore;
-              $("#score").text(points);
-              loadgame(loadscore); // this should tell the game to load saved game
+              if (evt.data === null){
+                console.log("No previosly saved game.");
+                return;
+              }
+              loadgame(evt.data.gameState.score);
+              console.log("loaded score:" + evt.data.gameState.score);
           } else if (evt.data.messageType === "ERROR") {
               alert(evt.data.info);
           }
@@ -286,14 +288,14 @@ function dropBrick() {
 
     // variable kusi is just for test purposes
 
-  function loadgame(kusi) {
+  function loadgame(loadedscore) {
       init();
       i = 0;
-      while (i < kusi) {
+      while (i < loadedscore) {
           dropBrick();
           i++;
       }
-      score = kusi;
+      score = loadedscore;
       gamestate = 0;
   }
 
