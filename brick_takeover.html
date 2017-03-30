@@ -262,15 +262,18 @@ function dropBrick() {
           var msg = {
               "messageType": "LOAD_REQUEST",
           };
+	  console.log("Requested a load");
           window.parent.postMessage(msg, "*");
 
       });
 
       window.addEventListener("message", function (evt) {
           if (evt.data.messageType === "LOAD") {
+	      console.log("Trying to load a score from game");
               loadgame(100);
+	      console.log("loaded score:" + evt.data.gameState.score);
+
 		  //loadgame(evt.data.gameState.score);
-              console.log("loaded score:" + evt.data.gameState.score);
           } else if (evt.data.messageType === "ERROR") {
               alert(evt.data.info);
           }
