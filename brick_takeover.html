@@ -278,7 +278,14 @@ function dropBrick() {
               alert(evt.data.info);
           }
       });
-
+    var message =  {
+      messageType: "SETTING",
+      options: {
+      	"width": 600, //Integer
+        "height": 600 //Integer
+        }
+    };
+    window.parent.postMessage(message, "*");
   });
 
 
