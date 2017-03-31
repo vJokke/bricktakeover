@@ -17,7 +17,7 @@
   var COLS = 25, ROWS = 25,
   EMPTY = 0, PLAYER = 1, BRICK = 2,
   UP = 1, LEFT = 0, RIGHT = 2, DOWN = 3,
-  KEY_LEFT = 37, KEY_RIGHT = 39, KEY_UP = 38, KEY_DOWN = 40,
+  KEY_LEFT = 65, KEY_RIGHT = 68, KEY_UP = 87, KEY_DOWN = 83,
   canvas, ctx, score, frames, keystate, gamestate;
 
 // grid for the game
@@ -107,9 +107,12 @@ function dropBrick() {
   function startgame() {
       init();
       gamestate = 0;
+	  
   }
 
   function init(){
+    $("#infotext").text("Move with WASD-buttons to avoid the bricks.");
+
     score = 0;
     grid.init(EMPTY, COLS, ROWS);
     var startingpoint = {x:10, y:5};
@@ -166,7 +169,6 @@ function dropBrick() {
   		}
       if (grid.get(nx, ny) === BRICK) {
         gameover();
-        console.log("game over");
 	  } 
 
       // checking collisions with borders
@@ -227,7 +229,9 @@ function dropBrick() {
 
 
   function gameover(){
-    gamestate = 1;
+	$("#infotext").text("Game over! Start new game, load saved or submit score below:");
+	gamestate = 1;
+
   }
 
   $(document).ready(function () {
@@ -303,13 +307,14 @@ function dropBrick() {
 
   main();
 </script>
-  <div>Points: <span id="pointspawn">0</span></div>
+  <div><span id="infotext">Move with WASD-keys to avoid the bricks.</span> Points: <span id="pointspawn">0</span></div>
 
   <button onclick="startgame()">New game</button>
-  <button id="submit_score">Submit score</button><br>
-
-  <button id="save">Save</button>
   <button id="load">Load</button>
+  <button id="save">Save</button>
+  <button id="submit_score">Submit score</button>
+
+
 
 </body>
 </html>
