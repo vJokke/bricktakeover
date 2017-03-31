@@ -242,7 +242,6 @@ function dropBrick() {
               "messageType": "SCORE",
               "score": parseFloat($("#pointspawn").text())
           };
-          console.log("submitted score: " + msg.score);
           window.parent.postMessage(msg, "*");
       });
 
@@ -256,7 +255,6 @@ function dropBrick() {
                   "score": parseFloat($("#pointspawn").text())
               }
           };
-          console.log(msg);
           window.parent.postMessage(msg, "*");
       }
       
@@ -266,18 +264,13 @@ function dropBrick() {
           var msg = {
               "messageType": "LOAD_REQUEST",
           };
-	  console.log("Requested a load");
           window.parent.postMessage(msg, "*");
 
       });
 
       window.addEventListener("message", function (evt) {
           if (evt.data.messageType === "LOAD") {
-	      console.log("Trying to load a score from game");
 	      loadgame(evt.data.gameState.score);
-
-	      console.log("loaded score:" + evt.data.gameState.score);
-
           } else if (evt.data.messageType === "ERROR") {
               alert(evt.data.info);
           }
