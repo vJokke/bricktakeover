@@ -270,6 +270,8 @@ function dropBrick() {
 
       window.addEventListener("message", function (evt) {
           if (evt.data.messageType === "LOAD") {
+		  console.log(evt.data.gameState.score);
+		  console.log(evt.data.gameState);
 	      loadgame(evt.data.gameState.score);
           } else if (evt.data.messageType === "ERROR") {
               alert(evt.data.info);
